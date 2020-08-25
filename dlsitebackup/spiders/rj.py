@@ -2,9 +2,7 @@ import scrapy
 import logging
 import urllib
 
-
 class RJSpider(scrapy.Spider):
-    handle_httpstatus_list = [302]
     name = "rj"
     meta = {'cookiejar': 'chrome'}
 
@@ -44,30 +42,43 @@ class RJSpider(scrapy.Spider):
             else:
                 last = urllib.parse.urlparse(
                     url).path.rsplit('/', 1)[-1].split('.')[0]
-                meta = self.meta.copy()
-                meta['filename'] = last + '.zip'
-                logging.info(url)
-                yield scrapy.Request(
-                    url,
-                    callback=self.get_redirect_url,
-                    meta=meta
-                )
+                yield {
+                    'filename': last + '.zip',
+                    'url': url
+                }
 
     def get_split_list(self, response):
         rows = response.xpath(
             '//table[@class="work_list_main"]//tr[not(@class)]')
         for row in rows:
-            meta = self.meta.copy()
             url = row.xpath('td[@class="work_dl"]//a/@href').get()
-            logging.info(url)
-            meta['filename'] = row.xpath(
+            filename = row.xpath(
                 'td[@class="work_content"]//p//strong/text()').get()
+            yield {
+                'filename': filename,
+                'url': url
+            }
+
+class DLSpider(scrapy.Spider):
+    name = "dl"
+    meta = {'cookiejar': 'chrome'}
+    handle_httpstatus_list = [302]
+
+    def __init__(self, rjitems=None):
+        self.rjitems = rjitems
+
+    def start_requests(self):
+        for item in self.rjitems:
+            meta = self.meta.copy()
+            meta['filename'] = item['filename']
             yield scrapy.Request(
-                url,
+                item['url'],
                 callback=self.get_redirect_url,
                 meta=meta
             )
 
     def get_redirect_url(self, response):
+        filename = response.meta['filename']
+        logging.info('start to request %s' % filename)
         url = str(response.headers['Location'], encoding='utf-8')
         yield {'file_urls': [url], 'meta': response.meta}

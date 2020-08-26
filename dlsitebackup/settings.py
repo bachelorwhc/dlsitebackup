@@ -13,6 +13,7 @@ SPIDER_MODULES = ['dlsitebackup.spiders']
 NEWSPIDER_MODULE = 'dlsitebackup.spiders'
 
 DOWNLOAD_WARNSIZE = 0
+DOWNLOAD_MAXSIZE = 0
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'dlsitebackup (+http://www.yourdomain.com)'

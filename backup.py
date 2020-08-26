@@ -27,7 +27,11 @@ class RJPipeline(object):
     def process_item(self, item, spider):
         if 'filename' in item:
             logging.info('found %s' % item['url'])
-            rjitems.append(item)
+            abspath = os.path.join(args.d, item['filename'])
+            if os.path.exists(abspath):
+                logging.info('%s exists already, this item will be skipped' % abspath)
+            else:
+                rjitems.append(item)
         return item
 
 

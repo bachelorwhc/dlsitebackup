@@ -11,8 +11,10 @@ from scrapy.pipelines.files import FilesPipeline
 from scrapy import Request
 import urllib
 
+
 class DLFilesPipeline(FilesPipeline):
-    name='dlfilespipeline'
+    name = 'dlfilespipeline'
+
     def get_media_requests(self, item, info):
         adapter = ItemAdapter(item)
         for file_url in adapter['file_urls']:

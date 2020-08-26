@@ -2,6 +2,7 @@ import scrapy
 import logging
 import urllib
 
+
 class RJSpider(scrapy.Spider):
     name = "rj"
     meta = {'cookiejar': 'chrome'}
@@ -59,26 +60,43 @@ class RJSpider(scrapy.Spider):
                 'url': url
             }
 
+
 class DLSpider(scrapy.Spider):
+    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'
     name = "dl"
     meta = {'cookiejar': 'chrome'}
     handle_httpstatus_list = [302]
 
     def __init__(self, rjitems=None):
         self.rjitems = rjitems
+        self.curr = 0
+
+    def next_item(self):
+        if self.curr >= len(self.rjitems):
+            return None
+        item = self.rjitems[self.curr]
+        self.curr += 1
+        return item
 
     def start_requests(self):
-        for item in self.rjitems:
-            meta = self.meta.copy()
-            meta['filename'] = item['filename']
-            yield scrapy.Request(
-                item['url'],
-                callback=self.get_redirect_url,
-                meta=meta
-            )
+        item = self.next_item()
+        if item is None:
+            return None
+        meta = self.meta.copy()
+        meta['filename'] = item['filename']
+        meta['url'] = item['url']
+        yield scrapy.Request(
+            item['url'],
+            callback=self.get_redirect_url,
+            meta=meta
+        )
 
     def get_redirect_url(self, response):
         filename = response.meta['filename']
         logging.info('start to request %s' % filename)
         url = str(response.headers['Location'], encoding='utf-8')
-        yield {'file_urls': [url], 'meta': response.meta}
+        meta = self.meta.copy()
+        meta['filename'] = filename
+        yield {'file_urls': [url], 'meta': meta}
+        for r in self.start_requests():
+            yield r

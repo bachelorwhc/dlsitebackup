@@ -14,6 +14,8 @@ NEWSPIDER_MODULE = 'dlsitebackup.spiders'
 
 DOWNLOAD_WARNSIZE = 0
 DOWNLOAD_MAXSIZE = 0
+RETRY_ENABLED = False
+DOWNLOAD_TIMEOUT = 10800
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'dlsitebackup (+http://www.yourdomain.com)'

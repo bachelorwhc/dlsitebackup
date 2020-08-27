@@ -1,6 +1,7 @@
 import scrapy
 import logging
 import urllib
+import os
 
 
 class RJSpider(scrapy.Spider):
@@ -67,15 +68,26 @@ class DLSpider(scrapy.Spider):
     meta = {'cookiejar': 'chrome'}
     handle_httpstatus_list = [302]
 
-    def __init__(self, rjitems=None):
+    def __init__(self, rjitems=None, dir=None):
         self.rjitems = rjitems
+        self.dir = dir
         self.curr = 0
 
     def next_item(self):
-        if self.curr >= len(self.rjitems):
-            return None
-        item = self.rjitems[self.curr]
-        self.curr += 1
+        def _next_item():
+            if self.curr >= len(self.rjitems):
+                return None
+            item = self.rjitems[self.curr]
+            self.curr += 1
+            return item
+        def _item_exists(item):
+            abspath = os.path.join(self.dir, item['filename'])
+            return os.path.exists(abspath)
+        item = None
+        while True:
+            item = _next_item()
+            if item is None or not _item_exists(item):
+                break
         return item
 
     def start_requests(self):
@@ -94,9 +106,12 @@ class DLSpider(scrapy.Spider):
     def get_redirect_url(self, response):
         filename = response.meta['filename']
         logging.info('start to request %s' % filename)
-        url = str(response.headers['Location'], encoding='utf-8')
-        meta = self.meta.copy()
-        meta['filename'] = filename
-        yield {'file_urls': [url], 'meta': meta}
+        if 'Location' in response.headers:
+            url = str(response.headers['Location'], encoding='utf-8')
+            meta = self.meta.copy()
+            meta['filename'] = filename
+            yield {'file_urls': [url], 'meta': meta}
+        else:
+            logging.warn('Skip %s because failed to parse headers' % filename)
         for r in self.start_requests():
             yield r

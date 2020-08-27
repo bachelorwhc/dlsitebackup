@@ -33,7 +33,7 @@ class RJPipeline(object):
             abspath = os.path.join(args.d, item['filename'])
             if os.path.exists(abspath):
                 logging.info(
-                    '%s exists already, this item will be skipped' % abspath)
+                    '%s exists already, this item was skipped' % abspath)
             else:
                 rjitems.append(item)
         return item
@@ -71,7 +71,7 @@ def crawl(rjitems):
         list_json = open(LIST_JSON_FILENAME, 'r')
         rjitems = json.load(list_json)
         list_json.close()
-    yield dl_runner.crawl(dlsitebackup.spiders.rj.DLSpider, rjitems=rjitems)
+    yield dl_runner.crawl(dlsitebackup.spiders.rj.DLSpider, rjitems=rjitems, dir=args.d)
     reactor.stop()
 
 
